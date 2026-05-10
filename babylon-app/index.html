@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        html,body{width:100%;height:100%;margin:0}
+        #renderCanvas{width:100%;height:100%}
+        @font-face {
+            font-family: "FnafPixel";
+            src: url("/babylon-app/FNAFPixelOne-Regular.otf") format("opentype");
+        }
+    </style>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Rubik+Glitch&display=swap" rel="stylesheet">
+</head>
+<body>
+<canvas id="renderCanvas"></canvas>
+
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+<script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+
+<script>
+const canvas = document.getElementById("renderCanvas");
+const engine = new BABYLON.Engine(canvas);
+const scene = new BABYLON.Scene(engine);
+
+// 🌫️ FOG
+scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
+scene.fogDensity = 0.42;
+scene.fogColor = new BABYLON.Color3(0,0,0);
+
+// câmera
+const slidesPos = [
+    new BABYLON.Vector3(0, 0.5, -0.6),
+    new BABYLON.Vector3(0, 1.5, -0.6),
+    new BABYLON.Vector3(20, 2, -10),
+    new BABYLON.Vector3(30, 3, -8)
+];
+
+// luz
+const lightStates = [
+    { dir: new BABYLON.Vector3(-1,-2,-1), intensity: 0.2 },
+    { dir: new BABYLON.Vector3(1,-1,0), intensity: 1.5 },
+    { dir: new BABYLON.Vector3(-1,-2,-1), intensity: 0.8 },
+    { dir: new BABYLON.Vector3(0,-1,-1), intensity: 0.6 }
+];
+
+const camera = new BABYLON.FreeCamera("cam", slidesPos[0].clone(), scene);
+camera.minZ = 0.01;
+camera.fov = 0.8;
+camera.attachControl(canvas, true);
+
+new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene).intensity = 0.3;
+
+const dirLight = new BABYLON.DirectionalLight("dirLight", lightStates[0].dir, scene);
+dirLight.position = new BABYLON.Vector3(5,10,5);
+dirLight.intensity = lightStates[0].intensity;
+
+const shadowGenerator = new BABYLON.ShadowGenerator(1024, dirLight);
+shadowGenerator.useBlurExponentialShadowMap = true;
+
+const glowC = new BABYLON.GlowLayer("glowC", scene);
+glowC.intensity = 0.7;
+
+const glow = new BABYLON.GlowLayer("glow", scene);
+glow.intensity = 8.2;
+
+
+const glow4 = new BABYLON.GlowLayer("glow4", scene);
+glow4.customEmissiveColorSelector = function(mesh, subMesh, material, result){
+    result.set(0.2,1,1,0);
+};
+glow4.intensity = 0.00;
+
+let slide = 0;
+let anim1 = null;
+let anim2 = null;
+let char1Meshes = [];
+let char3Loaded = false;
+let char3Meshes = [];
+let anim3 = null;
+let char4Meshes = [];
+let char4Loaded = false;
+let anim4 = null;
+let char4Timeout = null;
+let isRunningForward = false; // Controle de movimento
+let char5Meshes = [];
+let anim5 = null;
+let char5Loaded = false;
+let char6Loaded = false;
+let char6Meshes = [];
+let anim6 = null;
+let switchedToRunWalk = false;
+let moveScottLooking = false;
+let scottLookingSteps = 0;
+
+// TEXTURAS
+const matChao = new BABYLON.StandardMaterial("chao", scene);
+matChao.diffuseTexture = new BABYLON.Texture("/babylon-app/FnafFloor.webp", scene);
+matChao.diffuseTexture.uScale = 45;
+matChao.diffuseTexture.vScale = 45;
+
+const matParede = new BABYLON.StandardMaterial("parede", scene);
+matParede.diffuseTexture = new BABYLON.Texture("/babylon-app/FnafWall.png", scene);
+matParede.backFaceCulling = false;
+matParede.diffuseTexture.uScale = 25;
+matParede.diffuseTexture.vScale = 1.2;
+
+// CORREDOR
+const ground = BABYLON.MeshBuilder.CreateGround("ground",{width:50,height:50},scene);
+ground.material = matChao;
+ground.receiveShadows = true;
+
+const wallL = BABYLON.MeshBuilder.CreatePlane("wallL",{width:50,height:2},scene);
+wallL.position.set(-1,1,0);
+wallL.rotation.y = Math.PI/2;
+wallL.material = matParede;
+
+const wallR = BABYLON.MeshBuilder.CreatePlane("wallR",{width:50,height:2},scene);
+wallR.position.set(1,1,0);
+wallR.rotation.y = -Math.PI/2;
+wallR.material = matParede;
+
+// WALL F
+const matParedeF = new BABYLON.PBRMaterial("paredeF", scene);
+matParedeF.albedoTexture = new BABYLON.Texture("/babylon-app/FnafWall.png", scene);
+matParedeF.backFaceCulling = false;
+matParedeF.metallic = 0;
+matParedeF.roughness = 1;
+matParedeF.emissiveColor = new BABYLON.Color3(0,0,0);
+
+const wallF = BABYLON.MeshBuilder.CreatePlane("wallF",{width:20,height:2},scene);
+wallF.position.set(0,1,20);
+wallF.rotation.y = Math.PI;
+wallF.material = matParedeF;
+
+// TETO
+const matTeto = new BABYLON.StandardMaterial("teto", scene);
+matTeto.diffuseTexture = new BABYLON.Texture("/babylon-app/CeilingFnaf.png", scene);
+matTeto.diffuseTexture.uScale = 45;
+matTeto.diffuseTexture.vScale = 45;
+
+const teto = BABYLON.MeshBuilder.CreatePlane("teto",{width:50,height:50},scene);
+teto.position.set(0,2,0);
+teto.rotation.x = Math.PI/2;
+teto.material = matTeto;
+teto.material.backFaceCulling = false;
+teto.receiveShadows = true;
+
+// PERSONAGEM 1
+BABYLON.SceneLoader.ImportMesh("", "/babylon-app/models/","TestSitting2.glb",scene,
+function (meshes, ps, skeletons, animationGroups) {
+    const matPers = new BABYLON.StandardMaterial("pers", scene);
+    matPers.diffuseTexture = new BABYLON.Texture("/babylon-app/scott_texture_Poor_2.png",scene);
+    matPers.emissiveColor = new BABYLON.Color3(0.05,1,1);
+
+    meshes.forEach(m=>{
+        m.scaling = new BABYLON.Vector3(0.1,0.1,0.1);
+        m.rotation.y = Math.PI;
+        m.position.set(0.2,0,0);
+        m.material = matPers;
+        char1Meshes.push(m);
+        glow.addIncludedOnlyMesh(m);
+        shadowGenerator.addShadowCaster(m);
+    });
+
+    anim1 = animationGroups;
+    if(anim1 && anim1.length>0) anim1[0].start(true);
+});
+
+// PERSONAGEM 2
+BABYLON.SceneLoader.ImportMesh("", "/babylon-app/models/","AnimDudePotatoDuo3.glb",scene,
+function (meshes, ps, skeletons, animationGroups) {
+    meshes.forEach(m=>{
+        m.scaling = new BABYLON.Vector3(0.1,0.1,0.1);
+        m.position.x = 20;
+        shadowGenerator.addShadowCaster(m);
+    });
+    anim2 = animationGroups;
+    anim2.forEach(a=>a.stop());
+});
+
+// ESCURIDÃO
+function escurecerWallF(valor){
+    BABYLON.Animation.CreateAndStartAnimation(
+        "fadeWall", wallF.material, "emissiveColor", 60, 60,
+        wallF.material.emissiveColor.clone(),
+        new BABYLON.Color3(valor,valor,valor),
+        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+    );
+}
+
+// GUI
+const gui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+const text = new BABYLON.GUI.TextBlock();
+text.text = "Press Start";
+text.color = "White";
+text.fontSize = 30;
+text.fontFamily = "FnafPixel";
+text.paddingLeft = "-600px";
+text.outlineWidth = 4;
+text.outlineColor = "Cyan";
+gui.addControl(text);
+
+// CONTROLE
+window.addEventListener("keydown",(e)=>{
+    if(e.key.toLowerCase()==="p"){
+        slide++;
+        if(slide>=slidesPos.length) slide = slidesPos.length-1;
+
+        BABYLON.Animation.CreateAndStartAnimation(
+            "camMove",camera,"position", 60, 350,
+            camera.position.clone(), slidesPos[slide],
+            BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+        );
+
+        const ls = lightStates[slide];
+        BABYLON.Animation.CreateAndStartAnimation(
+            "lightDir",dirLight,"direction", 60, 60,
+            dirLight.direction.clone(), ls.dir,
+            BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+        );
+
+        BABYLON.Animation.CreateAndStartAnimation(
+            "lightInt",dirLight,"intensity", 60, 60,
+            dirLight.intensity, ls.intensity,
+            BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+        );
+
+        if(slide === 1){
+            // Fade texto
+            const anim = new BABYLON.Animation("fadeText", "alpha", 80, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+            anim.setKeys([{ frame: 0, value: text.alpha }, { frame: 60, value: 0 }]);
+            text.animations = [anim];
+            scene.beginAnimation(text, 0, 60, false);
+
+            camera.rotationQuaternion = null;
+            BABYLON.Animation.CreateAndStartAnimation(
+                "camRot", camera, "rotation", 60, 200,
+                camera.rotation.clone(), new BABYLON.Vector3(0.5, -Math.PI/10000, 0),
+                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+            );
+
+            if(!char3Loaded){
+                char3Loaded = true;
+                const matPers3 = new BABYLON.StandardMaterial("pers3", scene);
+                matPers3.diffuseTexture = new BABYLON.Texture("/babylon-app/scott_texture_Poor_2.png", scene);
+                matPers3.emissiveColor = new BABYLON.Color3(0.05, 1, 1);
+
+                BABYLON.SceneLoader.ImportMesh("", "/babylon-app/models/", "GettingUp.glb", scene, function(meshes, ps, skeletons, animationGroups){
+                    meshes.forEach(m=>{
+                        m.scaling = new BABYLON.Vector3(0.1,0.1,0.1);
+                        m.rotation.y = Math.PI * 6.5;
+                        m.material = matPers3;
+                        m.position.set(0.2,0,0);
+                        char3Meshes.push(m);
+                        shadowGenerator.addShadowCaster(m);
+                        glow.addIncludedOnlyMesh(m);
+                    });
+                    anim3 = animationGroups;
+                    if(anim3?.length) anim3[0].start(true);
+                });
+            }
+
+            char3Meshes.forEach(m=>m.setEnabled(true));
+
+            if(!char4Timeout){
+                char4Timeout = setTimeout(()=>{
+                    if(slide !== 1) return;
+                    if(!char4Loaded){
+                        char4Loaded = true;
+                        const matPers4 = new BABYLON.StandardMaterial("pers4", scene);
+                        matPers4.diffuseTexture = new BABYLON.Texture("/babylon-app/scott_texture_Poor_2.png", scene);
+                        matPers4.emissiveColor = new BABYLON.Color3(0.50,1,1);
+                        
+                        BABYLON.SceneLoader.ImportMesh("", "/babylon-app/models/", "RunningScott.glb", scene, function(meshes, ps, skeletons, animationGroups){
+                            meshes.forEach(m=>{
+                                m.scaling = new BABYLON.Vector3(0.1,0.1,0.1);
+                                m.rotation.y = Math.PI;
+                                m.position.set(0,0,0); // Começa no início do corredor
+                                m.material = matPers4;
+                                char4Meshes.push(m);
+                                shadowGenerator.addShadowCaster(m);
+                                glowC.addIncludedOnlyMesh(m);
+                            });
+                            anim4 = animationGroups;
+                            if(anim4?.length) anim4[0].start(true);
+                            isRunningForward = true; // Ativa movimento
+                        });
+                    } else {
+                        // Reseta posição se já carregado
+                        char4Meshes.forEach(m => m.position.z = 0);
+                        isRunningForward = true;
+                    }
+                    char4Meshes.forEach(m=>m.setEnabled(true));
+                }, 6000);
+            }
+        }
+
+        if(slide !== 1){
+            char3Meshes.forEach(m=>m.setEnabled(false));
+            char4Meshes.forEach(m=>m.setEnabled(false));
+            isRunningForward = false;
+            if(char4Timeout){
+                clearTimeout(char4Timeout);
+                char4Timeout = null;
+            }
+        }
+
+        char1Meshes.forEach(m=> m.setEnabled(slide !== 1));
+
+        if(slide === 0) escurecerWallF(0.2);
+        if(slide === 1) escurecerWallF(0.05);
+        if(slide === 2) escurecerWallF(0.0);
+        if(slide === 3) escurecerWallF(0.1);
+
+        if(anim1) anim1.forEach(a=>a.stop());
+        if(anim2) anim2.forEach(a=>a.stop());
+        if((slide===0||slide===1)&&anim1) anim1[0].start(true);
+        if(slide===2&&anim2) anim2[0].start(true);
+    }
+});
+
+// LOOP DE RENDERIZAÇÃO
+// LOOP DE RENDERIZAÇÃO
+const corredorFim = 15; // Ponto onde o loop reinicia
+const corredorInicio = 0; // Ponto de partida
+
+engine.runRenderLoop(() => {
+    if (isRunningForward && char4Meshes.length > 0) {
+        // 1. Pega a malha principal do personagem 4
+        const mainChar4 = char4Meshes[0];
+
+        // 2. Move o personagem para frente
+let speed = 0.05;
+
+// desaceleração gradual depois do z 7
+if(mainChar4.position.z >= 7){
+
+    const minSpeed = 0.005;
+
+    speed /= 1.1;
+
+    if(speed < minSpeed){
+        speed = minSpeed;
+    }
+}
+
+char4Meshes.forEach(m=>{
+    m.position.z += speed;
+});
+
+const targetPos = new BABYLON.Vector3(
+    mainChar4.position.x,
+    1.5,
+    mainChar4.position.z
+);
+
+camera.position = BABYLON.Vector3.Lerp(
+    camera.position,
+    targetPos,
+    0.01
+);
+if(mainChar4.position.z >= 7 && !switchedToRunWalk){
+
+    switchedToRunWalk = true;
+
+    // salva posição atual
+    const currentPos = mainChar4.position.clone();
+
+    // esconde personagem 4
+    char4Meshes.forEach(m=>{
+        m.setEnabled(false);
+    });
+
+    // para animação antiga
+    if(anim4){
+        anim4.forEach(a=>a.stop());
+    }
+
+    // carrega novo modelo
+    if(!char6Loaded){
+
+        char6Loaded = true;
+
+        const matPers6 = new BABYLON.StandardMaterial("pers6", scene);
+        matPers6.diffuseTexture = new BABYLON.Texture(
+            "/babylon-app/scott_texture_Poor_2.png",
+            scene
+        );
+
+        matPers6.emissiveColor = new BABYLON.Color3(0.5,1,1);
+
+        BABYLON.SceneLoader.ImportMesh(
+            "",
+            "/babylon-app/models/",
+            "RunWalkScott.glb",
+            scene,
+            function(meshes, ps, skeletons, animationGroups){
+
+                meshes.forEach(m=>{
+
+                    m.scaling = new BABYLON.Vector3(0.1,0.1,0.1);
+
+                    m.rotation.y = Math.PI;
+
+                    m.position = currentPos.clone();
+
+                    m.material = matPers6;
+
+                    char6Meshes.push(m);
+
+                    glowC.addIncludedOnlyMesh(m);
+
+                    shadowGenerator.addShadowCaster(m);
+                });
+
+                anim6 = animationGroups;
+
+                if(anim6?.length){
+                    anim6[0].start(true);
+                }
+
+                // novo personagem continua correndo
+                char4Meshes = char6Meshes;
+            }
+        );
+
+    } else {
+
+        char6Meshes.forEach(m=>{
+
+            m.position = currentPos.clone();
+
+            m.setEnabled(true);
+        });
+
+        if(anim6){
+            anim6.forEach(a=>a.start(true));
+        }
+
+        char4Meshes = char6Meshes;
+    }
+}
+
+        // 4. Lógica de LOOP
+if (mainChar4.position.z >= 20) {
+
+    isRunningForward = false;
+
+    // fade + desaparece
+    char4Meshes.forEach(m=>{
+    m.setEnabled(false);
+});
+
+    // posição final do personagem 4
+    const finalPos = mainChar4.position.clone();
+
+    // cria personagem 5
+    if(!char5Loaded){
+
+        char5Loaded = true;
+
+        const matPers5 = new BABYLON.StandardMaterial("pers5", scene);
+        matPers5.diffuseTexture = new BABYLON.Texture("/babylon-app/scott_texture_Poor_2.png", scene);
+        matPers5.emissiveColor = new BABYLON.Color3(0.05,1,1);
+
+        BABYLON.SceneLoader.ImportMesh(
+            "",
+            "/babylon-app/models/",
+            "ScottLooking.glb",
+            scene,
+            function(meshes, ps, skeletons, animationGroups){
+
+                meshes.forEach(m=>{
+
+                    m.scaling = new BABYLON.Vector3(0.1,0.1,0.1);
+
+                    // mesma rotação do primeiro
+                    m.rotation.y = Math.PI * 0.5;
+
+                    // aparece onde o 4 parou
+                    m.position = finalPos.clone();
+
+                    m.material = matPers5;
+
+                    char5Meshes.push(m);
+
+                    glow.addIncludedOnlyMesh(m);
+                    shadowGenerator.addShadowCaster(m);
+                });
+
+                anim5 = animationGroups;
+
+                if(anim5 && anim5.length > 0){
+                    anim5[0].start(true);
+                }
+                setTimeout(()=>{
+    moveScottLooking = true;
+}, 2000);
+
+                setTimeout(()=>{
+camera.position = new BABYLON.Vector3(-0.9, 0.3, 17.9);
+
+camera.rotation = new BABYLON.Vector3(
+    -0.1,
+    Math.PI / 2,
+    0
+);
+}, 2000);   
+
+                setTimeout(()=>{
+camera.position = new BABYLON.Vector3(0.2, 0.7, 18);
+
+camera.rotation = new BABYLON.Vector3(
+    0.2,
+    Math.PI / -2,
+    0
+);
+}, 4000);   
+            }
+        );
+
+    } else {
+
+        // se já existir, apenas move
+        char5Meshes.forEach(m=>{
+            m.position = finalPos.clone();
+            m.setEnabled(true);
+        });
+
+        if(anim5 && anim5.length > 0){
+            anim5[0].start(true);
+        }
+    }
+}
+    }
+if(moveScottLooking){
+
+    char5Meshes.forEach(m=>{
+
+        m.position.x -= 0.001;
+
+    });
+
+    scottLookingSteps++;
+
+    if(scottLookingSteps >= 100){
+
+        moveScottLooking = false;
+
+    }
+}
+    scene.render();
+});
+
+window.addEventListener("resize", () => engine.resize());
+</script>
+</body>
+</html>
