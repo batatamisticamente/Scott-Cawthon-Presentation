@@ -246,7 +246,7 @@ window.addEventListener("keydown",(e)=>{
             if(!char3Loaded){
                 char3Loaded = true;
                 const matPers3 = new BABYLON.StandardMaterial("pers3", scene);
-                matPers3.diffuseTexture = new BABYLON.Texture("./scott_texture_Poor_2.png", scene);
+                matPers3.diffuseTexture = new BABYLON.Texture("./scott_texture_poor_2.png", scene);
                 matPers3.emissiveColor = new BABYLON.Color3(0.05, 1, 1);
 
                 BABYLON.SceneLoader.ImportMesh("", "./models/", "GettingUp.glb", scene, function(meshes, ps, skeletons, animationGroups){
@@ -272,7 +272,7 @@ window.addEventListener("keydown",(e)=>{
                     if(!char4Loaded){
                         char4Loaded = true;
                         const matPers4 = new BABYLON.StandardMaterial("pers4", scene);
-                        matPers4.diffuseTexture = new BABYLON.Texture("./scott_texture_Poor_2.png", scene);
+                        matPers4.diffuseTexture = new BABYLON.Texture("./scott_texture_poor_2.png", scene);
                         matPers4.emissiveColor = new BABYLON.Color3(0.50,1,1);
                         
                         BABYLON.SceneLoader.ImportMesh("", "./models/", "RunningScott.glb", scene, function(meshes, ps, skeletons, animationGroups){
@@ -387,7 +387,7 @@ if(mainChar4.position.z >= 7 && !switchedToRunWalk){
 
         const matPers6 = new BABYLON.StandardMaterial("pers6", scene);
         matPers6.diffuseTexture = new BABYLON.Texture(
-            "./scott_texture_Poor_2.png",
+            "./scott_texture_poor_2.png",
             scene
         );
 
@@ -464,7 +464,7 @@ if (mainChar4.position.z >= 20) {
         char5Loaded = true;
 
         const matPers5 = new BABYLON.StandardMaterial("pers5", scene);
-        matPers5.diffuseTexture = new BABYLON.Texture("./scott_texture_Poor_2.png", scene);
+        matPers5.diffuseTexture = new BABYLON.Texture("./scott_texture_poor_2.png", scene);
         matPers5.emissiveColor = new BABYLON.Color3(0.05,1,1);
 
         BABYLON.SceneLoader.ImportMesh(
