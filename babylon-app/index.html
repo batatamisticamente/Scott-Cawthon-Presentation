@@ -6,7 +6,7 @@
         #renderCanvas{width:100%;height:100%}
         @font-face {
             font-family: "FnafPixel";
-            src: url("/babylon-app/FNAFPixelOne-Regular.otf") format("opentype");
+            src: url("./FNAFPixelOne-Regular.otf") format("opentype");
         }
     </style>
 
@@ -109,12 +109,12 @@ let whiteFlashTriggered = false;
 
 // TEXTURAS
 const matChao = new BABYLON.StandardMaterial("chao", scene);
-matChao.diffuseTexture = new BABYLON.Texture("/babylon-app/FnafFloor.webp", scene);
+matChao.diffuseTexture = new BABYLON.Texture("./FnafFloor.webp", scene);
 matChao.diffuseTexture.uScale = 45;
 matChao.diffuseTexture.vScale = 45;
 
 const matParede = new BABYLON.StandardMaterial("parede", scene);
-matParede.diffuseTexture = new BABYLON.Texture("/babylon-app/FnafWall.png", scene);
+matParede.diffuseTexture = new BABYLON.Texture("./FnafWall.png", scene);
 matParede.backFaceCulling = false;
 matParede.diffuseTexture.uScale = 25;
 matParede.diffuseTexture.vScale = 1.2;
@@ -136,7 +136,7 @@ wallR.material = matParede;
 
 // WALL F
 const matParedeF = new BABYLON.PBRMaterial("paredeF", scene);
-matParedeF.albedoTexture = new BABYLON.Texture("/babylon-app/FnafWall.png", scene);
+matParedeF.albedoTexture = new BABYLON.Texture("./FnafWall.png", scene);
 matParedeF.backFaceCulling = false;
 matParedeF.metallic = 0;
 matParedeF.roughness = 1;
@@ -149,7 +149,7 @@ wallF.material = matParedeF;
 
 // TETO
 const matTeto = new BABYLON.StandardMaterial("teto", scene);
-matTeto.diffuseTexture = new BABYLON.Texture("/babylon-app/CeilingFnaf.png", scene);
+matTeto.diffuseTexture = new BABYLON.Texture("./CeilingFnaf.png", scene);
 matTeto.diffuseTexture.uScale = 45;
 matTeto.diffuseTexture.vScale = 45;
 
@@ -200,7 +200,7 @@ Porta.rotation.y = Math.PI / 2;
 
 BABYLON.SceneLoader.ImportMesh(
     "",
-    "/babylon-app/models/",
+    "./models/",
     "LowPolyRoom2.glb",
     scene,
     function(meshes){
@@ -222,10 +222,10 @@ BABYLON.SceneLoader.ImportMesh(
 );
 
 // PERSONAGEM 1
-BABYLON.SceneLoader.ImportMesh("", "/babylon-app/models/","TestSitting2.glb",scene,
+BABYLON.SceneLoader.ImportMesh("", "./models/","TestSitting2.glb",scene,
 function (meshes, ps, skeletons, animationGroups) {
     const matPers = new BABYLON.StandardMaterial("pers", scene);
-    matPers.diffuseTexture = new BABYLON.Texture("/babylon-app/scott_texture_Poor_2.png",scene);
+    matPers.diffuseTexture = new BABYLON.Texture("./scott_texture_Poor_2.png",scene);
     matPers.emissiveColor = new BABYLON.Color3(0.05,1,1);
 
     meshes.forEach(m=>{
@@ -243,7 +243,7 @@ function (meshes, ps, skeletons, animationGroups) {
 });
 
 // PERSONAGEM 2
-BABYLON.SceneLoader.ImportMesh("", "/babylon-app/models/","AnimDudePotatoDuo3.glb",scene,
+BABYLON.SceneLoader.ImportMesh("", "./models/","AnimDudePotatoDuo3.glb",scene,
 function (meshes, ps, skeletons, animationGroups) {
     meshes.forEach(m=>{
         m.scaling = new BABYLON.Vector3(0.1,0.1,0.1);
@@ -365,10 +365,10 @@ window.addEventListener("keydown",(e)=>{
             if(!char3Loaded){
                 char3Loaded = true;
                 const matPers3 = new BABYLON.StandardMaterial("pers3", scene);
-                matPers3.diffuseTexture = new BABYLON.Texture("/babylon-app/scott_texture_Poor_2.png", scene);
+                matPers3.diffuseTexture = new BABYLON.Texture("./scott_texture_Poor_2.png", scene);
                 matPers3.emissiveColor = new BABYLON.Color3(0.05, 1, 1);
 
-                BABYLON.SceneLoader.ImportMesh("", "/babylon-app/models/", "GettingUp.glb", scene, function(meshes, ps, skeletons, animationGroups){
+                BABYLON.SceneLoader.ImportMesh("", "./models/", "GettingUp.glb", scene, function(meshes, ps, skeletons, animationGroups){
                     meshes.forEach(m=>{
                         m.scaling = new BABYLON.Vector3(0.1,0.1,0.1);
                         m.rotation.y = Math.PI * 6.5;
@@ -391,10 +391,10 @@ window.addEventListener("keydown",(e)=>{
                     if(!char4Loaded){
                         char4Loaded = true;
                         const matPers4 = new BABYLON.StandardMaterial("pers4", scene);
-                        matPers4.diffuseTexture = new BABYLON.Texture("/babylon-app/scott_texture_Poor_2.png", scene);
+                        matPers4.diffuseTexture = new BABYLON.Texture("./scott_texture_Poor_2.png", scene);
                         matPers4.emissiveColor = new BABYLON.Color3(0.50,1,1);
                         
-                        BABYLON.SceneLoader.ImportMesh("", "/babylon-app/models/", "RunningScott.glb", scene, function(meshes, ps, skeletons, animationGroups){
+                        BABYLON.SceneLoader.ImportMesh("", "./models/", "RunningScott.glb", scene, function(meshes, ps, skeletons, animationGroups){
                             meshes.forEach(m=>{
                                 m.scaling = new BABYLON.Vector3(0.1,0.1,0.1);
                                 m.rotation.y = Math.PI;
@@ -506,7 +506,7 @@ if(mainChar4.position.z >= 7 && !switchedToRunWalk){
 
         const matPers6 = new BABYLON.StandardMaterial("pers6", scene);
         matPers6.diffuseTexture = new BABYLON.Texture(
-            "/babylon-app/scott_texture_Poor_2.png",
+            "./scott_texture_Poor_2.png",
             scene
         );
 
@@ -514,7 +514,7 @@ if(mainChar4.position.z >= 7 && !switchedToRunWalk){
 
         BABYLON.SceneLoader.ImportMesh(
             "",
-            "/babylon-app/models/",
+            "./models/",
             "RunWalkScott.glb",
             scene,
             function(meshes, ps, skeletons, animationGroups){
@@ -583,12 +583,12 @@ if (mainChar4.position.z >= 20) {
         char5Loaded = true;
 
         const matPers5 = new BABYLON.StandardMaterial("pers5", scene);
-        matPers5.diffuseTexture = new BABYLON.Texture("/babylon-app/scott_texture_Poor_2.png", scene);
+        matPers5.diffuseTexture = new BABYLON.Texture("./scott_texture_Poor_2.png", scene);
         matPers5.emissiveColor = new BABYLON.Color3(0.05,1,1);
 
         BABYLON.SceneLoader.ImportMesh(
             "",
-            "/babylon-app/models/",
+            "./models/",
             "ScottLooking.glb",
             scene,
             function(meshes, ps, skeletons, animationGroups){
@@ -645,14 +645,14 @@ setTimeout(() => {
                 // 👤 cria personagem NOVO (sem clone)
                 BABYLON.SceneLoader.ImportMesh(
                     "",
-                    "/babylon-app/models/",
+                    "./models/",
                     "ScottDev.glb",
                     scene,
                     function (meshes) {
 
                         const matNovo = new BABYLON.StandardMaterial("persRoom", scene);
                         matNovo.diffuseTexture = new BABYLON.Texture(
-                            "/babylon-app/scott_texture_Poor_2.png",
+                            "./scott_texture_Poor_2.png",
                             scene
                         );
                         matNovo.emissiveColor = new BABYLON.Color3(0.05, 1, 1);
