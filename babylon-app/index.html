@@ -6,7 +6,7 @@
         #renderCanvas{width:100%;height:100%}
         @font-face {
             font-family: "FnafPixel";
-            src: url("./FNAFPixelOne-Regular.otf") format("opentype");
+            src: url("/babylon-app/FNAFPixelOne-Regular.otf") format("opentype");
         }
     </style>
 
@@ -26,6 +26,8 @@ const canvas = document.getElementById("renderCanvas");
 const engine = new BABYLON.Engine(canvas);
 const scene = new BABYLON.Scene(engine);
 
+
+
 // 🌫️ FOG
 scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
 scene.fogDensity = 0.42;
@@ -35,8 +37,15 @@ scene.fogColor = new BABYLON.Color3(0,0,0);
 const slidesPos = [
     new BABYLON.Vector3(0, 0.5, -0.6),
     new BABYLON.Vector3(0, 1.5, -0.6),
-    new BABYLON.Vector3(20, 2, -10),
+    new BABYLON.Vector3(30.7, 0.55, 0.4),
     new BABYLON.Vector3(30, 3, -8)
+];
+
+const slidesRot = [
+    new BABYLON.Vector3(0, 0, 0),
+    new BABYLON.Vector3(0, 0, 0),
+    new BABYLON.Vector3(0, -Math.PI / -2, 0),
+    new BABYLON.Vector3(0, Math.PI / 2, 0)
 ];
 
 // luz
@@ -51,6 +60,7 @@ const camera = new BABYLON.FreeCamera("cam", slidesPos[0].clone(), scene);
 camera.minZ = 0.01;
 camera.fov = 0.8;
 camera.attachControl(canvas, true);
+
 
 new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene).intensity = 0.3;
 
@@ -95,15 +105,16 @@ let anim6 = null;
 let switchedToRunWalk = false;
 let moveScottLooking = false;
 let scottLookingSteps = 0;
+let whiteFlashTriggered = false;
 
 // TEXTURAS
 const matChao = new BABYLON.StandardMaterial("chao", scene);
-matChao.diffuseTexture = new BABYLON.Texture("./FnafFloor.webp", scene);
+matChao.diffuseTexture = new BABYLON.Texture("/babylon-app/FnafFloor.webp", scene);
 matChao.diffuseTexture.uScale = 45;
 matChao.diffuseTexture.vScale = 45;
 
 const matParede = new BABYLON.StandardMaterial("parede", scene);
-matParede.diffuseTexture = new BABYLON.Texture("./FnafWall.png", scene);
+matParede.diffuseTexture = new BABYLON.Texture("/babylon-app/FnafWall.png", scene);
 matParede.backFaceCulling = false;
 matParede.diffuseTexture.uScale = 25;
 matParede.diffuseTexture.vScale = 1.2;
@@ -125,7 +136,7 @@ wallR.material = matParede;
 
 // WALL F
 const matParedeF = new BABYLON.PBRMaterial("paredeF", scene);
-matParedeF.albedoTexture = new BABYLON.Texture("./FnafWall.png", scene);
+matParedeF.albedoTexture = new BABYLON.Texture("/babylon-app/FnafWall.png", scene);
 matParedeF.backFaceCulling = false;
 matParedeF.metallic = 0;
 matParedeF.roughness = 1;
@@ -138,7 +149,7 @@ wallF.material = matParedeF;
 
 // TETO
 const matTeto = new BABYLON.StandardMaterial("teto", scene);
-matTeto.diffuseTexture = new BABYLON.Texture("./CeilingFnaf.png", scene);
+matTeto.diffuseTexture = new BABYLON.Texture("/babylon-app/CeilingFnaf.png", scene);
 matTeto.diffuseTexture.uScale = 45;
 matTeto.diffuseTexture.vScale = 45;
 
@@ -149,11 +160,72 @@ teto.material = matTeto;
 teto.material.backFaceCulling = false;
 teto.receiveShadows = true;
 
+const matPorta = new BABYLON.StandardMaterial("porta", scene);
+matPorta.diffuseTexture = new BABYLON.Texture("DoorTexture.jpg", scene);
+matPorta.backFaceCulling = false;
+matPorta.diffuseTexture.uScale = 1;
+matPorta.diffuseTexture.vScale = 1;
+
+const Porta = BABYLON.MeshBuilder.CreateBox(
+    "Porta",
+    {width:0.5,height:1,depth:0.04},
+    scene
+);
+
+Porta.material = matPorta;
+Porta.checkCollisions = true;
+Porta.isPickable = true;
+
+// dobradiça
+const hinge = new BABYLON.TransformNode("hinge", scene);
+
+hinge.position = new BABYLON.Vector3(
+    -1.25,
+    0.5,
+    17.9
+);
+
+// conecta porta na dobradiça
+Porta.parent = hinge;
+
+// posição LOCAL da porta
+Porta.position = new BABYLON.Vector3(
+    0.25, // metade da largura da porta
+    0,
+    0
+);
+
+// rotação
+Porta.rotation.y = Math.PI / 2;
+
+BABYLON.SceneLoader.ImportMesh(
+    "",
+    "/babylon-app/models/",
+    "LowPolyRoom2.glb",
+    scene,
+    function(meshes){
+
+        const root = new BABYLON.TransformNode("bedroomRoot", scene);
+        
+
+        meshes.forEach(m=>{
+            m.parent = root;
+        });
+
+        root.scaling = new BABYLON.Vector3(0.5,0.5,0.5);
+        root.position = new BABYLON.Vector3(30,0,0);
+        root.rotation.y = Math.PI;
+    },
+    null,
+    null,
+    ".glb"
+);
+
 // PERSONAGEM 1
-BABYLON.SceneLoader.ImportMesh("", "./models/","TestSitting2.glb",scene,
+BABYLON.SceneLoader.ImportMesh("", "/babylon-app/models/","TestSitting2.glb",scene,
 function (meshes, ps, skeletons, animationGroups) {
     const matPers = new BABYLON.StandardMaterial("pers", scene);
-    matPers.diffuseTexture = new BABYLON.Texture("./scott_texture_poor_2.png",scene);
+    matPers.diffuseTexture = new BABYLON.Texture("/babylon-app/scott_texture_Poor_2.png",scene);
     matPers.emissiveColor = new BABYLON.Color3(0.05,1,1);
 
     meshes.forEach(m=>{
@@ -171,7 +243,7 @@ function (meshes, ps, skeletons, animationGroups) {
 });
 
 // PERSONAGEM 2
-BABYLON.SceneLoader.ImportMesh("", "./models/","AnimDudePotatoDuo3.glb",scene,
+BABYLON.SceneLoader.ImportMesh("", "/babylon-app/models/","AnimDudePotatoDuo3.glb",scene,
 function (meshes, ps, skeletons, animationGroups) {
     meshes.forEach(m=>{
         m.scaling = new BABYLON.Vector3(0.1,0.1,0.1);
@@ -192,6 +264,36 @@ function escurecerWallF(valor){
     );
 }
 
+function moveCamera(i){
+
+    if(i === 1) return;
+
+    const startPos = camera.position.clone();
+    const startRot = camera.rotation.clone();
+
+    BABYLON.Animation.CreateAndStartAnimation(
+        "camMove",
+        camera,
+        "position",
+        60,
+        350,
+        startPos,
+        slidesPos[i],
+        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+    );
+
+    BABYLON.Animation.CreateAndStartAnimation(
+        "camRot",
+        camera,
+        "rotation",
+        60,
+        350,
+        startRot,
+        slidesRot[i],
+        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+    );
+}
+
 // GUI
 const gui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
 const text = new BABYLON.GUI.TextBlock();
@@ -204,11 +306,28 @@ text.outlineWidth = 4;
 text.outlineColor = "Cyan";
 gui.addControl(text);
 
+
+
+const txt = new BABYLON.GUI.TextBlock();
+txt.text = "⬜⬜⬜⬜⬜";
+txt.color = "white";
+txt.fontSize = 200000;
+txt.alpha = 0;
+txt.fontWeight = "bold";
+gui.addControl(txt);
+txt.width = "1";
+txt.height = "1";
+
+// fade in lento
+let alpha = 0;
+
+
 // CONTROLE
 window.addEventListener("keydown",(e)=>{
     if(e.key.toLowerCase()==="p"){
         slide++;
         if(slide>=slidesPos.length) slide = slidesPos.length-1;
+        moveCamera(slide);
 
         BABYLON.Animation.CreateAndStartAnimation(
             "camMove",camera,"position", 60, 350,
@@ -246,10 +365,10 @@ window.addEventListener("keydown",(e)=>{
             if(!char3Loaded){
                 char3Loaded = true;
                 const matPers3 = new BABYLON.StandardMaterial("pers3", scene);
-                matPers3.diffuseTexture = new BABYLON.Texture("./scott_texture_poor_2.png", scene);
+                matPers3.diffuseTexture = new BABYLON.Texture("/babylon-app/scott_texture_Poor_2.png", scene);
                 matPers3.emissiveColor = new BABYLON.Color3(0.05, 1, 1);
 
-                BABYLON.SceneLoader.ImportMesh("", "./models/", "GettingUp.glb", scene, function(meshes, ps, skeletons, animationGroups){
+                BABYLON.SceneLoader.ImportMesh("", "/babylon-app/models/", "GettingUp.glb", scene, function(meshes, ps, skeletons, animationGroups){
                     meshes.forEach(m=>{
                         m.scaling = new BABYLON.Vector3(0.1,0.1,0.1);
                         m.rotation.y = Math.PI * 6.5;
@@ -272,10 +391,10 @@ window.addEventListener("keydown",(e)=>{
                     if(!char4Loaded){
                         char4Loaded = true;
                         const matPers4 = new BABYLON.StandardMaterial("pers4", scene);
-                        matPers4.diffuseTexture = new BABYLON.Texture("./scott_texture_poor_2.png", scene);
+                        matPers4.diffuseTexture = new BABYLON.Texture("/babylon-app/scott_texture_Poor_2.png", scene);
                         matPers4.emissiveColor = new BABYLON.Color3(0.50,1,1);
                         
-                        BABYLON.SceneLoader.ImportMesh("", "./models/", "RunningScott.glb", scene, function(meshes, ps, skeletons, animationGroups){
+                        BABYLON.SceneLoader.ImportMesh("", "/babylon-app/models/", "RunningScott.glb", scene, function(meshes, ps, skeletons, animationGroups){
                             meshes.forEach(m=>{
                                 m.scaling = new BABYLON.Vector3(0.1,0.1,0.1);
                                 m.rotation.y = Math.PI;
@@ -387,7 +506,7 @@ if(mainChar4.position.z >= 7 && !switchedToRunWalk){
 
         const matPers6 = new BABYLON.StandardMaterial("pers6", scene);
         matPers6.diffuseTexture = new BABYLON.Texture(
-            "./scott_texture_poor_2.png",
+            "/babylon-app/scott_texture_Poor_2.png",
             scene
         );
 
@@ -395,7 +514,7 @@ if(mainChar4.position.z >= 7 && !switchedToRunWalk){
 
         BABYLON.SceneLoader.ImportMesh(
             "",
-            "./models/",
+            "/babylon-app/models/",
             "RunWalkScott.glb",
             scene,
             function(meshes, ps, skeletons, animationGroups){
@@ -464,12 +583,12 @@ if (mainChar4.position.z >= 20) {
         char5Loaded = true;
 
         const matPers5 = new BABYLON.StandardMaterial("pers5", scene);
-        matPers5.diffuseTexture = new BABYLON.Texture("./scott_texture_poor_2.png", scene);
+        matPers5.diffuseTexture = new BABYLON.Texture("/babylon-app/scott_texture_Poor_2.png", scene);
         matPers5.emissiveColor = new BABYLON.Color3(0.05,1,1);
 
         BABYLON.SceneLoader.ImportMesh(
             "",
-            "./models/",
+            "/babylon-app/models/",
             "ScottLooking.glb",
             scene,
             function(meshes, ps, skeletons, animationGroups){
@@ -497,9 +616,92 @@ if (mainChar4.position.z >= 20) {
                 if(anim5 && anim5.length > 0){
                     anim5[0].start(true);
                 }
+
+                
+
+setTimeout(() => {
+
+    txt.text = "███████";
+    txt.alpha = 0;
+
+    let alpha = 0;
+    let triggered = false;
+
+    const fadeIn = scene.onBeforeRenderObservable.add(() => {
+        alpha += 0.03;
+
+        if (alpha >= 1) {
+            alpha = 1;
+            txt.alpha = 1;
+
+            // 🚨 dispara só uma vez quando o texto fica totalmente visível
+            if (!triggered) {
+                triggered = true;
+
+                // 🎥 TELEPORTE DA CÂMERA pro LowPolyRoom
+                camera.position = new BABYLON.Vector3(30.5, 0.6, -1);
+                camera.rotation = new BABYLON.Vector3(0.2, 0.1, 0);
+
+                // 👤 cria personagem NOVO (sem clone)
+                BABYLON.SceneLoader.ImportMesh(
+                    "",
+                    "/babylon-app/models/",
+                    "ScottDev.glb",
+                    scene,
+                    function (meshes) {
+
+                        const matNovo = new BABYLON.StandardMaterial("persRoom", scene);
+                        matNovo.diffuseTexture = new BABYLON.Texture(
+                            "/babylon-app/scott_texture_Poor_2.png",
+                            scene
+                        );
+                        matNovo.emissiveColor = new BABYLON.Color3(0.05, 1, 1);
+
+                        meshes.forEach(m => {
+                            m.scaling = new BABYLON.Vector3(0.1, 0.1, 0.1);
+                            m.position = new BABYLON.Vector3(34.1, 0.1, 0.5);
+                            m.rotation.y = Math.PI / -2;
+                            m.material = matNovo;
+
+                            // ⭐ MESMO BRILHO DO PRIMEIRO PERSONAGEM
+                            glow.addIncludedOnlyMesh(m);
+
+                            // (opcional) sombras iguais
+                            shadowGenerator.addShadowCaster(m);
+                        });
+                    }
+                );
+            }
+
+            scene.onBeforeRenderObservable.remove(fadeIn);
+
+            // ⏳ depois disso começa o fade out
+            setTimeout(() => {
+
+                const fadeOut = scene.onBeforeRenderObservable.add(() => {
+                    alpha -= 0.02;
+
+                    if (alpha <= 0) {
+                        alpha = 0;
+                        txt.alpha = 0;
+                        scene.onBeforeRenderObservable.remove(fadeOut);
+                    } else {
+                        txt.alpha = alpha;
+                    }
+                });
+
+            }, 1000);
+        }
+
+        txt.alpha = alpha;
+    });
+
+}, 7000);
+
                 setTimeout(()=>{
     moveScottLooking = true;
 }, 2000);
+
 
                 setTimeout(()=>{
 camera.position = new BABYLON.Vector3(-0.9, 0.3, 17.9);
